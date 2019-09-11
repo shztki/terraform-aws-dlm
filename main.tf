@@ -1,51 +1,50 @@
 /**
  * Usage:
  *
- * module "dlm_3days" {
- *   source      = "git::https://github.com/shztki/terraform-aws-dlm.git?ref=1.0.0"
- *   role_name   = "dlm-lifecycle-role"
- *   policy_name = "dlm-lifecycle-policy"
- *   role_tags   = "${module.label.tags}"
+ * module "dlm_14days" {
+ *   source      = "git::https://github.com/shztki/terraform-aws-dlm.git?ref=2.0.0"
+ *   dlm_role_name   = "dlm-lifecycle-role"
+ *   dlm_policy_name = "dlm-lifecycle-policy"
+ *   dlm_role_tags   = "${module.label.tags}"
+ *   dlm_description        = "Every 0300 14gen"
+ *   dlm_execution_role_arn = ""
+ *   dlm_schedule_name      = "14 generations snapshot at daily"
  * 
- *   description        = "DLM lifecycle policy for 3days"
- *   execution_role_arn = ""
- *   schedule_name      = "3 generations snapshot at daily"
- * 
- *   target_tags {
- *     dlm_snapshot = "daily-3"
+ *   dlm_target_tags {
+ *     dlm_snapshot = "daily-0300-14"
  *   }
  * 
- *   copy_tags = true
+ *   dlm_copy_tags = true
  * 
- *   tags_to_add {
+ *   dlm_tags_to_add {
  *     SnapshotCreator = "DLM"
  *   }
  * 
- *   interval = "24"
- *   times    = ["09:40"]
- *   count    = "3"
+ *   dlm_interval = "24"
+ *   dlm_times    = ["18:00"] # 03:00 JST
+ *   dlm_count    = "14"
  * }
  * 
  * #module "dlm_7days" {
- * #  source = "git::https://github.com/shztki/terraform-aws-dlm.git?ref=1.0.0"
+ * #  source = "git::https://github.com/shztki/terraform-aws-dlm.git?ref=2.0.0"
  * #
- * #  description        = "DLM lifecycle policy for 7days"
- * #  execution_role_arn = "${module.dlm_3days.role_arn}"
- * #  schedule_name      = "7 generations snapshot at daily"
+ * #  dlm_description        = "Every 0300 7gen"
+ * #  dlm_execution_role_arn = "${module.dlm_14days.role_arn}"
+ * #  dlm_schedule_name      = "7 generations snapshot at daily"
  * #
- * #  target_tags {
- * #    dlm_snapshot = "daily-7"
+ * #  dlm_target_tags {
+ * #    dlm_snapshot = "daily-0300-7"
  * #  }
  * #
- * #  copy_tags = true
+ * #  dlm_copy_tags = true
  * #
- * #  tags_to_add {
+ * #  dlm_tags_to_add {
  * #    SnapshotCreator = "DLM"
  * #  }
  * #
- * #  interval = "24"
- * #  times    = ["06:45"]
- * #  count    = "7"
+ * #  dlm_interval = "24"
+ * #  dlm_times    = ["18:00"] # 03:00 JST
+ * #  dlm_count    = "7"
  * #}
  */
 
@@ -63,9 +62,9 @@ data "aws_iam_policy_document" "role" {
 }
 
 resource "aws_iam_role" "this" {
-  count              = "${var.execution_role_arn == "" ? 1 : 0}"
-  name               = "${var.role_name}"
-  tags               = "${var.role_tags}"
+  count              = "${var.dlm_execution_role_arn == "" ? 1 : 0}"
+  name               = "${var.dlm_role_name}"
+  tags               = "${var.dlm_role_tags}"
   assume_role_policy = "${data.aws_iam_policy_document.role.json}"
 }
 
@@ -92,38 +91,38 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_iam_role_policy" "this" {
-  count  = "${var.execution_role_arn == "" ? 1 : 0}"
-  name   = "${var.policy_name}"
-  role   = "${aws_iam_role.this.id}"
+  count  = "${var.dlm_execution_role_arn == "" ? 1 : 0}"
+  name   = "${var.dlm_policy_name}"
+  role   = "${aws_iam_role.this[0].id}"
   policy = "${data.aws_iam_policy_document.policy.json}"
 }
 
 resource "aws_dlm_lifecycle_policy" "this" {
-  description        = "${var.description}"
-  execution_role_arn = "${coalesce(var.execution_role_arn, join("", aws_iam_role.this.*.arn))}"
-  state              = "${var.state}"
+  description        = "${var.dlm_description}"
+  execution_role_arn = "${coalesce(var.dlm_execution_role_arn, join("", aws_iam_role.this.*.arn))}"
+  state              = "${var.dlm_state}"
 
   policy_details {
-    resource_types = ["${var.resource_types}"]
+    resource_types = ["${var.dlm_resource_types}"]
 
     schedule {
-      name = "${var.schedule_name}"
+      name = "${var.dlm_schedule_name}"
 
       create_rule {
-        interval      = "${var.interval}"
-        interval_unit = "${var.interval_unit}"
-        times         = ["${var.times}"]
+        interval      = "${var.dlm_interval}"
+        interval_unit = "${var.dlm_interval_unit}"
+        times         = "${var.dlm_times}"
       }
 
       retain_rule {
-        count = "${var.count}"
+        count = "${var.dlm_count}"
       }
 
-      tags_to_add = "${var.tags_to_add}"
+      tags_to_add = "${var.dlm_tags_to_add}"
 
-      copy_tags = "${var.copy_tags}"
+      copy_tags = "${var.dlm_copy_tags}"
     }
 
-    target_tags = "${var.target_tags}"
+    target_tags = "${var.dlm_target_tags}"
   }
 }
