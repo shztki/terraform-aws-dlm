@@ -2,21 +2,21 @@
  * Usage:
  *
  * module "dlm_14days" {
- *   source      = "git::https://github.com/shztki/terraform-aws-dlm.git?ref=2.0.0"
- *   dlm_role_name   = "dlm-lifecycle-role"
- *   dlm_policy_name = "dlm-lifecycle-policy"
- *   dlm_role_tags   = "${module.label.tags}"
+ *   source = "git::https://github.com/shztki/terraform-aws-dlm.git?ref=2.0.0"
+ *   dlm_role_name          = "dlm-lifecycle-role"
+ *   dlm_policy_name        = "dlm-lifecycle-policy"
+ *   dlm_role_tags          = "${module.label.tags}"
  *   dlm_description        = "Every 0300 14gen"
  *   dlm_execution_role_arn = ""
  *   dlm_schedule_name      = "14 generations snapshot at daily"
  * 
- *   dlm_target_tags {
- *     dlm_snapshot = "daily-0300-14"
+ *   dlm_target_tags = {
+ *     DlmSnapshot = "daily-0300-14"
  *   }
  * 
  *   dlm_copy_tags = true
  * 
- *   dlm_tags_to_add {
+ *   dlm_tags_to_add = {
  *     SnapshotCreator = "DLM"
  *   }
  * 
@@ -27,18 +27,18 @@
  * 
  * #module "dlm_7days" {
  * #  source = "git::https://github.com/shztki/terraform-aws-dlm.git?ref=2.0.0"
- * #
- * #  dlm_description        = "Every 0300 7gen"
  * #  dlm_execution_role_arn = "${module.dlm_14days.role_arn}"
+ * #  dlm_description        = "Every 0300 7gen"
+ * #  dlm_execution_role_arn = ""
  * #  dlm_schedule_name      = "7 generations snapshot at daily"
  * #
- * #  dlm_target_tags {
- * #    dlm_snapshot = "daily-0300-7"
+ * #  dlm_target_tags = {
+ * #    DlmSnapshot = "daily-0300-07"
  * #  }
  * #
  * #  dlm_copy_tags = true
  * #
- * #  dlm_tags_to_add {
+ * #  dlm_tags_to_add = {
  * #    SnapshotCreator = "DLM"
  * #  }
  * #
